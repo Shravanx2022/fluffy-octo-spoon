@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex,nofollow" />
+<title>Zeotap GTM Test Harness — Contact</title>
+<style>
+  :root{
+    --ink:#0B1020; --panel:#121A2E; --panel-2:#0F1626; --line:#243049;
+    --mist:#8A97B1; --mist-2:#5C6985; --paper:#EEF2FB;
+    --electric:#2D6BFF; --electric-soft:#1b2c52; --signal:#25E0A4; --warn:#FFB454; --bad:#FF6B6B;
+    --r:14px; --r-sm:9px;
+    --sans:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(1200px 600px at 85% -10%, #16264a 0%, transparent 55%),
+      radial-gradient(900px 500px at -5% 110%, #102038 0%, transparent 50%),
+      var(--ink);
+    color:var(--paper); font-family:var(--sans);
+    -webkit-font-smoothing:antialiased; line-height:1.45; min-height:100vh;
+  }
+  a{color:var(--electric)}
+  .wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+
+  /* status strip */
+  .status{
+    display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line);border-radius:var(--r);
+    padding:12px 16px;margin-bottom:18px;
+  }
+  .brandmark{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.2px;margin-right:auto}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--mist-2);box-shadow:0 0 0 0 rgba(0,0,0,0)}
+  .dot.on{background:var(--signal);box-shadow:0 0 12px 1px rgba(37,224,164,.55)}
+  .dot.wait{background:var(--warn)}
+  .pill{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12.5px;color:var(--mist)}
+  .pill b{color:var(--paper);font-weight:600}
+  .gtmbox{display:flex;align-items:center;gap:8px}
+  .gtmbox input{
+    font-family:var(--mono);font-size:12.5px;background:var(--ink);color:var(--paper);
+    border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 9px;width:160px;
+  }
+  .gtmbox input:focus{outline:2px solid var(--electric);outline-offset:1px;border-color:transparent}
+  .btn{
+    font-family:var(--sans);font-weight:600;font-size:13px;cursor:pointer;
+    background:var(--electric);color:#fff;border:0;border-radius:var(--r-sm);padding:8px 13px;
+    transition:transform .08s ease, filter .15s ease;
+  }
+  .btn:hover{filter:brightness(1.08)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;color:var(--mist);border:1px solid var(--line)}
+  .btn.ghost:hover{color:var(--paper)}
+
+  /* split layout: left = visitor view, right = tag view */
+  .grid{display:grid;grid-template-columns:1.05fr 1fr;gap:18px}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .card-h{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mist-2)}
+  .card-h h2{margin:0;font-size:15px;font-weight:650}
+  .card-b{padding:18px}
+
+  /* contact form */
+  .lead{color:var(--mist);font-size:13.5px;margin:0 0 16px}
+  .field{margin-bottom:13px}
+  .field label{display:block;font-size:12.5px;color:var(--mist);margin-bottom:6px}
+  .field .req{color:var(--electric)}
+  .field input,.field textarea{
+    width:100%;font-family:var(--sans);font-size:14px;color:var(--paper);
+    background:var(--ink);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 12px;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .field textarea{min-height:84px;resize:vertical}
+  .field input:focus,.field textarea:focus{outline:none;border-color:var(--electric);box-shadow:0 0 0 3px rgba(45,107,255,.18)}
+  .field input:invalid:not(:placeholder-shown){border-color:#5a3550}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  .submit{width:100%;padding:12px;font-size:14.5px;margin-top:4px}
+  .formnote{font-size:11.5px;color:var(--mist-2);margin-top:10px}
+  .ok{
+    display:none;margin-top:14px;padding:12px 14px;border-radius:var(--r-sm);
+    background:rgba(37,224,164,.10);border:1px solid rgba(37,224,164,.35);color:#aef6da;font-size:13px;
+  }
+  .ok.show{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  /* monitor */
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin:-4px 0 12px;font-family:var(--mono);font-size:11px;color:var(--mist-2)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .tick{width:8px;height:8px;border-radius:2px}
+  .monitor{
+    font-family:var(--mono);font-size:12.5px;line-height:1.5;
+    background:#070B16;border:1px solid var(--line);border-radius:var(--r-sm);
+    height:430px;overflow:auto;padding:12px 14px;
+  }
+  .ev{padding:9px 0;border-bottom:1px dashed var(--line)}
+  .ev:last-child{border-bottom:0}
+  .ev .name{color:var(--paper);font-weight:600}
+  .ev .name.gtm{color:#7fa6ff}
+  .ev .name.fire{color:var(--signal)}
+  .ev .idx{color:var(--mist-2);margin-right:8px}
+  .ev pre{margin:6px 0 0;white-space:pre-wrap;word-break:break-word;color:var(--mist)}
+  .hl{color:var(--signal);font-weight:700;background:rgba(37,224,164,.10);border-radius:3px;padding:0 3px}
+  .empty{color:var(--mist-2);padding:8px 0}
+
+  /* help */
+  details.help{margin-top:18px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r)}
+  details.help>summary{cursor:pointer;padding:14px 18px;font-weight:600;font-size:14px;list-style:none}
+  details.help>summary::-webkit-details-marker{display:none}
+  details.help>summary::before{content:"▸ ";color:var(--electric)}
+  details.help[open]>summary::before{content:"▾ "}
+  .help-b{padding:0 18px 18px;color:var(--mist);font-size:13.5px}
+  .help-b code{font-family:var(--mono);background:var(--ink);border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--paper);font-size:12.5px}
+  .help-b ol{padding-left:18px} .help-b li{margin:7px 0}
+  .kbd{font-family:var(--mono);font-size:12px;color:var(--mist)}
+
+  @media (max-width:860px){
+    .grid{grid-template-columns:1fr}
+    .monitor{height:320px}
+    .brandmark{margin-right:0;width:100%}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- STATUS STRIP -->
+  <div class="status" role="region" aria-label="Test harness status">
+    <div class="brandmark">
+      <svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 6 38h36L24 4Z" fill="none" stroke="#2D6BFF" stroke-width="3.5" stroke-linejoin="round"/></svg>
+      <span>Zeotap GTM Test Harness</span>
+    </div>
+    <span class="pill"><span id="dotGtm" class="dot wait"></span>GTM&nbsp;container&nbsp;<b id="gtmShown">—</b></span>
+    <span class="pill"><span id="dotSdk" class="dot"></span>Zeotap&nbsp;SDK&nbsp;<b id="sdkShown">not detected</b></span>
+    <span class="gtmbox">
+      <input id="gtmInput" spellcheck="false" placeholder="GTM-XXXXXXX" aria-label="GTM container ID" />
+      <button class="btn" id="gtmLoad">Load container</button>
+    </span>
+  </div>
+
+  <div class="grid">
+
+    <!-- LEFT: what the visitor sees -->
+    <section class="card">
+      <div class="card-h">
+        <span class="eyebrow">Visitor view</span>
+        <h2>Contact us</h2>
+      </div>
+      <div class="card-b">
+        <p class="lead">A real, validating contact form — the same shape as the Like&nbsp;Reply demo. Submitting it fires GTM's native Form&nbsp;Submission trigger <em>and</em> pushes a clean <code style="font-family:var(--mono)">form_submitted</code> event to the data layer.</p>
+
+        <form id="contactForm" novalidate>
+          <div class="field">
+            <label for="name">Full name <span class="req">*</span></label>
+            <input id="name" name="name" type="text" required placeholder="Jane Doe" autocomplete="name" />
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="email">Email <span class="req">*</span></label>
+              <input id="email" name="email" type="email" required placeholder="jane@company.com" autocomplete="email" />
+            </div>
+            <div class="field">
+              <label for="phone">Phone</label>
+              <input id="phone" name="phone" type="tel" placeholder="+49 151 23456789" autocomplete="tel" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="company">Company</label>
+            <input id="company" name="company" type="text" placeholder="Acme GmbH" autocomplete="organization" />
+          </div>
+          <div class="field">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" placeholder="How can we help?"></textarea>
+          </div>
+          <button class="btn submit" type="submit">Send message</button>
+          <p class="formnote">No data is sent to any backend. Submission stays on this page and only drives the data layer, so you can validate GTM → Zeotap safely.</p>
+          <div class="ok" id="okMsg" role="status"></div>
+        </form>
+      </div>
+    </section>
+
+    <!-- RIGHT: what the tag sees -->
+    <section class="card">
+      <div class="card-h">
+        <span class="eyebrow">Tag view</span>
+        <h2>Data Layer Monitor</h2>
+        <button class="btn ghost" id="clearBtn" style="margin-left:auto;padding:6px 10px;font-size:12px">Clear</button>
+      </div>
+      <div class="card-b">
+        <div class="legend">
+          <span><i class="tick" style="background:#7fa6ff"></i>GTM internal</span>
+          <span><i class="tick" style="background:#25E0A4"></i>form_submitted</span>
+          <span><i class="tick" style="background:#8A97B1"></i>other</span>
+          <span style="margin-left:auto">live · <span id="evCount">0</span> events</span>
+        </div>
+        <div class="monitor" id="monitor" aria-live="polite"><div class="empty">Waiting for the GTM container to load…</div></div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- HELP -->
+  <details class="help">
+    <summary>How to use this page</summary>
+    <div class="help-b">
+      <ol>
+        <li>The page auto-loads container <code id="gtmEcho">GTM-TTC6MVJ</code>. To use a different one, type it above and press <span class="kbd">Load container</span> (reloads with <code>?gtm=</code>).</li>
+        <li>In that GTM workspace, add the <b>Zeotap Collect Tag</b> with <b>your own write key</b>, then attach a <b>Custom Event</b> trigger on <code>form_submitted</code> and map a Data Layer Variable <code>email</code> into <b>Capture Email</b>. (Full steps are in the setup guide.)</li>
+        <li>Enter <b>Preview</b> in GTM, point Tag&nbsp;Assistant at this page's URL, submit the form, and watch: the event appears in the monitor, <b>Zeotap SDK</b> flips to <span style="color:var(--signal)">detected</span>, and in DevTools → Network you'll see the call to <code>spl.zeotap.com</code> / <code>content.zeotap.com</code>.</li>
+      </ol>
+      <p style="margin:10px 0 0">Tip: append <code>?gtm=GTM-XXXXXXX</code> to the URL to preset the container without typing.</p>
+    </div>
+  </details>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var DEFAULT_GTM = "GTM-TTC6MVJ";
+
+  // ---- resolve container id: ?gtm= > localStorage > default ----
+  function getParam(n){ try{ return new URLSearchParams(location.search).get(n); }catch(e){ return null; } }
+  function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  var GTM_ID = (getParam("gtm") || lsGet("zeo_gtm") || DEFAULT_GTM).trim();
+  if(GTM_ID) lsSet("zeo_gtm", GTM_ID);
+
+  // reflect in UI
+  var gtmShown=document.getElementById("gtmShown");
+  var gtmInput=document.getElementById("gtmInput");
+  var gtmEcho=document.getElementById("gtmEcho");
+  gtmShown.textContent = GTM_ID || "—";
+  gtmInput.value = GTM_ID || "";
+  if(gtmEcho) gtmEcho.textContent = GTM_ID || "GTM-XXXXXXX";
+
+  // ---- init dataLayer & inject GTM (standard snippet, parameterised) ----
+  window.dataLayer = window.dataLayer || [];
+  var validId = /^GTM-[A-Z0-9]+$/.test(GTM_ID);
+  if(validId){
+    window.dataLayer.push({'gtm.start': Date.now(), event:'gtm.js'});
+    var j=document.createElement('script');
+    j.async=true; j.src='https://www.googletagmanager.com/gtm.js?id='+encodeURIComponent(GTM_ID);
+    document.head.appendChild(j);
+  }
+
+  // ---- container-id control: reload with ?gtm= for a clean single injection ----
+  function applyContainer(){
+    var v=(gtmInput.value||"").trim().toUpperCase();
+    if(!/^GTM-[A-Z0-9]+$/.test(v)){ gtmInput.focus(); gtmInput.style.borderColor="var(--bad)"; return; }
+    lsSet("zeo_gtm", v);
+    var u=new URL(location.href); u.searchParams.set("gtm", v); location.href=u.toString();
+  }
+  document.getElementById("gtmLoad").addEventListener("click", applyContainer);
+  gtmInput.addEventListener("keydown", function(e){ if(e.key==="Enter") applyContainer(); });
+
+  // ---- live monitor: render the whole dataLayer (GTM leaves every push in the array) ----
+  var monitor=document.getElementById("monitor");
+  var evCount=document.getElementById("evCount");
+  var lastLen=-1;
+  function esc(s){ return String(s).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c];}); }
+  function nameOf(o){
+    if(o && typeof o==="object" && !Array.isArray(o) && o.event!=null) return String(o.event);
+    if(Array.isArray(o) && o[0]==="event") return String(o[1]);   // gtag-style
+    return "(push)";
+  }
+  function classOf(name){
+    if(name==="form_submitted") return "fire";
+    if(name.indexOf("gtm.")===0 || name==="gtm.js") return "gtm";
+    return "";
+  }
+  function pretty(o){
+    var clone;
+    try{ clone=JSON.parse(JSON.stringify(o)); }catch(e){ clone=o; }
+    var s = esc(JSON.stringify(clone, null, 2));
+    // highlight an email value if present
+    s = s.replace(/("email"\s*:\s*")([^"]+)(")/g, '$1<span class="hl">$2</span>$3');
+    return s;
+  }
+  function render(){
+    var dl=window.dataLayer||[];
+    if(dl.length===lastLen) return;
+    lastLen=dl.length; evCount.textContent=dl.length;
+    if(!dl.length){ monitor.innerHTML='<div class="empty">No data-layer events yet.</div>'; return; }
+    var html="";
+    for(var i=0;i<dl.length;i++){
+      var o=dl[i], nm=nameOf(o);
+      html+='<div class="ev"><span class="idx">#'+i+'</span>'+
+            '<span class="name '+classOf(nm)+'">'+esc(nm)+'</span>'+
+            '<pre>'+pretty(o)+'</pre></div>';
+    }
+    var atBottom = monitor.scrollHeight - monitor.scrollTop - monitor.clientHeight < 40;
+    monitor.innerHTML=html;
+    if(atBottom) monitor.scrollTop=monitor.scrollHeight;
+  }
+  setInterval(render, 400);
+  setTimeout(render, 120);
+  document.getElementById("clearBtn").addEventListener("click", function(){
+    // visual clear only — we can't truly empty GTM's array without breaking it
+    monitor.innerHTML='<div class="empty">Cleared view. New events will reappear.</div>'; lastLen=-2;
+  });
+
+  // ---- status dots ----
+  var dotGtm=document.getElementById("dotGtm");
+  var dotSdk=document.getElementById("dotSdk"), sdkShown=document.getElementById("sdkShown");
+  setInterval(function(){
+    if(window.google_tag_manager){ dotGtm.className="dot on"; }
+    if(window.zeotap){ dotSdk.className="dot on"; sdkShown.textContent="detected"; sdkShown.style.color="var(--signal)"; }
+  }, 500);
+
+  // ---- form submit: push a clean event the Zeotap tag can consume ----
+  var form=document.getElementById("contactForm");
+  var ok=document.getElementById("okMsg");
+  form.addEventListener("submit", function(e){
+    e.preventDefault();                 // keep the test on-page
+    if(!form.checkValidity()){ form.reportValidity(); return; }
+    var email=document.getElementById("email").value.trim();
+    var payload={
+      event:"form_submitted",
+      form_id:"contact_us",
+      name:document.getElementById("name").value.trim(),
+      email:email,
+      phone:document.getElementById("phone").value.trim(),
+      company:document.getElementById("company").value.trim()
+    };
+    window.dataLayer.push(payload);     // <-- this is what your trigger fires on
+    render();
+    ok.textContent="Pushed form_submitted to the data layer with email "+email+". Check the monitor and your GTM Preview.";
+    ok.classList.add("show");
+  });
+})();
+</script>
+</body>
+</html>
